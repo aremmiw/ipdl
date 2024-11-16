@@ -15,18 +15,20 @@ GetOptions ("output=s" => \$output,
 
 print_help() if $help;
 
-die 'Error: No output given!' unless (length $output); #TODO: check that path is writable
+unless (length $output && !-d $output) {
+	die 'Error: No output given!';
+}
 
 my @files;
 my $linkcounter = 0;
+
+open(my $outfh, '>', $output) || die $!;
 
 foreach (@ARGV) {
 	unless (check_url($_) || check_file_read($_)) {
 		die "Error: Invalid file/url: $_";
 	}
 }
-
-open(my $outfh, '>', $output) || die $!;
 
 my %seenips;
 # $ipv4_regex matches any IPv4 address or IPv4 CIDR block
@@ -35,14 +37,14 @@ my $ipv4_regex = '((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]
 #my $ipv6_regex =
 
 foreach my $file (@files) {
-	open(my $ifileh, '<', $file) || die $!;
-	while (<$ifileh>) {
+	open(my $infh, '<', $file) || die $!;
+	while (<$infh>) {
 		chomp;
 		if (($_ =~ /$ipv4_regex/) && !$seenips{$1}++) {
 			print $outfh "$1\n";
 		}
 	}
-	close $ifileh;
+	close $infh;
 }
 
 close $outfh || warn 'Closing output failed!';
@@ -52,7 +54,7 @@ sub check_url {
 	if (/$RE{URI}{HTTP}{-scheme => qr<https?>}/) {
 		my $temppath = "/tmp/ipdl$linkcounter.txt";
 		my $dl = getstore($_, $temppath);
-		if (defined($dl) && $dl == 200) {
+		if ($dl == 200) {
 			push(@files, $temppath);
 			$linkcounter++;
 			return 1;
