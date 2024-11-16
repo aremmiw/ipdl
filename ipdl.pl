@@ -45,7 +45,7 @@ foreach my $file (@files) {
 	close $ifileh;
 }
 
-close $outfh || warn "Closing output failed!";
+close $outfh || warn 'Closing output failed!';
 
 sub check_url {
 	shift;
@@ -71,6 +71,15 @@ sub check_file_read {
 }
 
 sub print_help {
-	print 'This is the help...';
+	print <<~'EOF';
+	ipdl - Merge lists of IPs (and HTTP(S) URLs of lists) to a single IP list.
+
+	Usage: ipdl.pl [OPTIONS]... [FILES/URLs]...
+	 --output, -o [FILE]	file to output merged list to. (REQUIRED)
+	 --help, -h		print this help
+
+	Each FILE/URL must be a text file or HTTP(S) link to a text file containing
+	 a list of IPv4/IPv6 addresses or CIDR blocks.
+	EOF
 	exit;
 }
