@@ -11,12 +11,12 @@ my $help;
 
 GetOptions ("output=s" => \$output,
 	    "help"     => \$help,
-	    ) || die 'Error: invalid options';
+	    ) || die 'Error: invalid options. Try --help';
 
-print_help() if $help;
+print_help() if $help || !length $output;
 
-unless (length $output && !-d $output) {
-	die 'Error: No output given!';
+unless ((-e $output && -f $output) || !-e $output) {
+	die 'Error: Cannot write output to non-file';
 }
 
 my @files;
@@ -65,7 +65,7 @@ sub check_url {
 
 sub check_file_read {
 	shift;
-	if (-e $_ && -r $_) {
+	if (-r $_ && -f $_) {
 		push(@files, $_);
 		return 1;
 	}
