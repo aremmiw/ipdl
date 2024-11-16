@@ -22,7 +22,7 @@ my $linkcounter = 0;
 
 foreach (@ARGV) {
 	unless (check_url($_) || check_file_read($_)) {
-		die "Invalid file/url: $_";
+		die "Error: Invalid file/url: $_";
 	}
 }
 
@@ -38,7 +38,7 @@ foreach my $file (@files) {
 	open(my $ifileh, '<', $file) || die $!;
 	while (<$ifileh>) {
 		chomp;
-		if (($_ =~ /$ipv4_regex/) && !$seenips{$_}++) {
+		if (($_ =~ /$ipv4_regex/) && !$seenips{$1}++) {
 			print $outfh "$1\n";
 		}
 	}
