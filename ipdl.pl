@@ -1,9 +1,10 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
+
 use Getopt::Long;
-use Regexp::Common qw(URI net);
 use LWP::Simple;
+use Regexp::Common qw(URI);
 
 my $output = "";
 my $help;
@@ -12,7 +13,7 @@ GetOptions ("output=s" => \$output,
 	    "help"     => \$help,
 	    ) || die 'Error: invalid options';
 
-print_help() unless (!$help);
+print_help() if $help;
 
 die 'Error: No output given!' unless (length $output); #TODO: check that path is writable
 
@@ -28,13 +29,17 @@ foreach (@ARGV) {
 open(my $outfh, '>', $output) || die $!;
 
 my %seenips;
+# $ipv4_regex matches any IPv4 address or IPv4 CIDR block
+my $ipv4_regex = '((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\/(3[0-2]|[12]?[0-9]))?)';
+# $ipv6_regex matches any IPv6 address or IPv6 CIDR block
+#my $ipv6_regex =
 
 foreach my $file (@files) {
 	open(my $ifileh, '<', $file) || die $!;
 	while (<$ifileh>) {
 		chomp;
-		if ((/$RE{net}{IPv4}{-keep}/ || /$RE{net}{IPv6}{-style => 'HeX'}{-keep}/) && !$seenips{$_}++) {
-			print $outfh "$1\n"
+		if (($_ =~ /$ipv4_regex/) && !$seenips{$_}++) {
+			print $outfh "$1\n";
 		}
 	}
 	close $ifileh;
