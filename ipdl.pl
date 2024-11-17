@@ -32,7 +32,7 @@ foreach (@ARGV) {
 
 my %seenips;
 # $ipv4_regex matches any IPv4 address or IPv4 CIDR block
-my $ipv4_regex = '((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\/(3[0-2]|[12]?[0-9]))?)';
+my $ipv4_regex = qr/((25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})[.](25[0-5]|2[0-4][0-9]|[0-1]?[0-9]{1,2})(\/(3[0-2]|[12]?[0-9]))?)/;
 # $ipv6_regex matches any IPv6 address or IPv6 CIDR block
 #my $ipv6_regex =
 
@@ -40,7 +40,7 @@ foreach my $file (@files) {
 	open(my $infh, '<', $file) || die $!;
 	while (<$infh>) {
 		chomp;
-		if (($_ =~ /$ipv4_regex/) && !$seenips{$1}++) {
+		if (($_ =~ m/$ipv4_regex/) && !$seenips{$1}++) {
 			print $outfh "$1\n";
 		}
 	}
@@ -49,10 +49,14 @@ foreach my $file (@files) {
 
 close $outfh || warn 'Closing output failed!';
 
+while ($linkcounter-- > 0) {
+	unlink '/tmp/ipdl' . $linkcounter . '.txt';
+}
+
 sub check_url {
 	shift;
 	if (/$RE{URI}{HTTP}{-scheme => qr<https?>}/) {
-		my $temppath = "/tmp/ipdl$linkcounter.txt";
+		my $temppath = '/tmp/ipdl' . $linkcounter . '.txt';
 		my $dl = getstore($_, $temppath);
 		if ($dl == 200) {
 			push(@files, $temppath);
@@ -77,11 +81,11 @@ sub print_help {
 	ipdl - Merge lists of IPs (and HTTP(S) URLs of lists) to a single IP list.
 
 	Usage: ipdl.pl [OPTIONS]... [FILES/URLs]...
-	 --output, -o [FILE]	file to output merged list to. (REQUIRED)
+	 --output, -o [FILE]	file to output merged list to (REQUIRED)
 	 --help, -h		print this help
 
 	Each FILE/URL must be a text file or HTTP(S) link to a text file containing
 	 a list of IPv4/IPv6 addresses or CIDR blocks.
 	EOF
-	exit;
+	exit 1;
 }
